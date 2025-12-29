@@ -14,6 +14,7 @@
 
 html, body {
   height: 100%;
+  overscroll-behavior: contain;
 }
 
 body {
@@ -23,6 +24,8 @@ body {
   color: rgba(255, 255, 255, 0.92);
   background: transparent;
   overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .wrap {

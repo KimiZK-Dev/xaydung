@@ -60,9 +60,37 @@
         gap: 10px;
       }
 
-      @media (max-width: 520px) {
+      @media (pointer: coarse) and (max-width: 520px), (pointer: coarse) and (max-height: 720px) {
+        .wrap {
+          padding: 12px;
+          min-height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .screen {
+          flex: 0 0 auto;
+        }
+
+        .tools {
+          flex: 1 1 auto;
+          min-height: 0;
+          overflow: auto;
+          overscroll-behavior: contain;
+        }
+
         .kbd {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          margin-top: 10px;
+          gap: 8px;
+          position: sticky;
+          bottom: 0;
+          z-index: 2;
+          padding: 10px;
+          padding-bottom: calc(10px + env(safe-area-inset-bottom));
+          border-radius: 14px;
+          background: rgba(0, 0, 0, 0.28);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
       }
 
@@ -78,10 +106,11 @@
         user-select: none;
       }
 
-      @media (max-width: 520px) {
+      @media (pointer: coarse) and (max-width: 520px) {
         .key {
-          padding: 12px 8px;
+          padding: 12px 6px;
           font-size: calc(15px * var(--fs-scale, 1));
+          min-height: 46px;
         }
       }
 
@@ -534,6 +563,13 @@
       addKeys(kbdBasic, BASIC_KEYS);
       addKeys(kbdSci, SCI_KEYS);
 
+      updateBadges();
+
+      badgeAngle.addEventListener("click", () => {
+        angleMode = angleMode === "RAD" ? "DEG" : "RAD";
+        render();
+      });
+
       function getExpr() {
         return String(exprInput.value || "");
       }
@@ -641,11 +677,15 @@
         return s.length > 18 ? s.slice(0, 18) + "…" : s;
       }
 
+      function nextAngleModeLabel() {
+        return angleMode === "RAD" ? "DEG" : "RAD";
+      }
+
       function updateBadges() {
         badgeAngle.textContent = angleMode;
         badgeMem.textContent = `M: ${shortText(memoryValue)}`;
         badgeAns.textContent = `Ans: ${shortText(ansValue)}`;
-        if (btnAngle) btnAngle.textContent = angleMode;
+        if (btnAngle) btnAngle.textContent = nextAngleModeLabel();
       }
 
       function setToolMode(next) {

@@ -45,6 +45,10 @@ body {
   color: var(--text);
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 .app {
   max-width: 1100px;
   margin: 0 auto;

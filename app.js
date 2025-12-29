@@ -447,6 +447,36 @@ function renderModules(model) {
 let popupZ = 1000;
 let popupCount = 0;
 
+let lockedScrollY = 0;
+let isScrollLocked = false;
+
+function updateModalOpenState() {
+  const host = document.getElementById("popupHost");
+  const hasPopup = !!(host && host.children && host.children.length > 0);
+  document.body.classList.toggle("modal-open", hasPopup);
+  document.documentElement.classList.toggle("modal-open", hasPopup);
+
+  if (hasPopup && !isScrollLocked) {
+    lockedScrollY = window.scrollY || 0;
+    isScrollLocked = true;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  if (!hasPopup && isScrollLocked) {
+    isScrollLocked = false;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, lockedScrollY);
+  }
+}
+
 function openPopup({ title, url }) {
   const host = document.getElementById("popupHost");
   if (!host) return;
@@ -503,6 +533,8 @@ function openPopup({ title, url }) {
   win.appendChild(resizer);
   host.appendChild(win);
 
+  updateModalOpenState();
+
   const isSmallScreen = window.innerWidth < 768 || window.innerHeight < 560;
   if (isSmallScreen) {
     win.classList.add("popup-fullscreen");
@@ -522,6 +554,7 @@ function openPopup({ title, url }) {
   btnClose.addEventListener("click", (e) => {
     e.stopPropagation();
     win.remove();
+    updateModalOpenState();
   });
 
   btnReload.addEventListener("pointerdown", (e) => {
