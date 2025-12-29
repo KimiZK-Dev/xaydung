@@ -63,34 +63,11 @@
       @media (pointer: coarse) and (max-width: 520px), (pointer: coarse) and (max-height: 720px) {
         .wrap {
           padding: 12px;
-          min-height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .screen {
-          flex: 0 0 auto;
-        }
-
-        .tools {
-          flex: 1 1 auto;
-          min-height: 0;
-          overflow: auto;
-          overscroll-behavior: contain;
         }
 
         .kbd {
           margin-top: 10px;
           gap: 8px;
-          position: sticky;
-          bottom: 0;
-          z-index: 2;
-          padding: 10px;
-          padding-bottom: calc(10px + env(safe-area-inset-bottom));
-          border-radius: 14px;
-          background: rgba(0, 0, 0, 0.28);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
         }
       }
 
@@ -466,7 +443,7 @@
           if (rawPx) {
             const px = Number(rawPx);
             if (Number.isFinite(px)) {
-              const clampedPx = Math.min(24, Math.max(12, px));
+              const clampedPx = Math.min(32, Math.max(12, px));
               document.documentElement.style.setProperty("--fs-scale", String(clampedPx / 16));
               return;
             }
@@ -476,7 +453,7 @@
           if (!raw) return;
           const n = Number(raw);
           if (!Number.isFinite(n)) return;
-          const clamped = Math.min(140, Math.max(85, n));
+          const clamped = Math.min(200, Math.max(85, n));
           document.documentElement.style.setProperty("--fs-scale", String(clamped / 100));
         } catch {
           // ignore

@@ -36,7 +36,7 @@ function applyFontScaleFromQuery() {
     if (rawPx) {
       const px = Number(rawPx);
       if (Number.isFinite(px)) {
-        const clampedPx = Math.min(24, Math.max(12, px));
+        const clampedPx = Math.min(32, Math.max(12, px));
         document.documentElement.style.setProperty("--fs-scale", String(clampedPx / 16));
         return;
       }
@@ -46,7 +46,7 @@ function applyFontScaleFromQuery() {
     if (!raw) return;
     const n = Number(raw);
     if (!Number.isFinite(n)) return;
-    const clamped = Math.min(140, Math.max(85, n));
+    const clamped = Math.min(200, Math.max(85, n));
     document.documentElement.style.setProperty("--fs-scale", String(clamped / 100));
   } catch {
     // ignore

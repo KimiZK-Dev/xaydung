@@ -97,17 +97,17 @@ function getFontPx() {
   const raw = localStorage.getItem(FONT_PX_KEY);
   const n = Number(raw);
   const fallback = FONT_BASE_PX;
-  return clamp(Number.isFinite(n) ? n : fallback, 12, 24);
+  return clamp(Number.isFinite(n) ? n : fallback, 12, 32);
 }
 
 function setFontPx(px) {
-  const p = clamp(Number(px), 12, 24);
+  const p = clamp(Number(px), 12, 32);
   localStorage.setItem(FONT_PX_KEY, String(p));
   applyFontPx(p);
 }
 
 function applyFontPx(px) {
-  const p = clamp(Number(px), 12, 24);
+  const p = clamp(Number(px), 12, 32);
   const scale = p / FONT_BASE_PX;
   const percent = Math.round(scale * 100);
 
