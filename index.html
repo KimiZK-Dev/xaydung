@@ -12,12 +12,14 @@
   <body>
     <div class="app">
       <header class="header">
-        <div>
-          <h1>Tính giá xây nhà</h1>
-          <p class="subtitle">Nhập kích thước (x, y, z), định mức, đơn giá để ước tính chi phí (tường, kết cấu, hoàn thiện) và đối chiếu theo m².</p>
-        </div>
         <div class="header-actions">
           <button id="btnOpenCalc" class="btn" type="button">Máy tính</button>
+          <div class="font-size-control">
+            <span class="font-size-label">Cỡ chữ</span>
+            <button id="fontDec" class="font-btn" type="button">A−</button>
+            <span id="fontScaleVal" class="font-size-val">16px (100%)</span>
+            <button id="fontInc" class="font-btn" type="button">A+</button>
+          </div>
           <button id="btnReset" class="btn secondary" type="button">Đặt lại mặc định</button>
         </div>
       </header>

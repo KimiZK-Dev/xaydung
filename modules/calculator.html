@@ -28,7 +28,7 @@
         color: rgba(255, 255, 255, 0.92);
         padding: 10px 10px;
         outline: none;
-        font-size: 14px;
+        font-size: calc(14px * var(--fs-scale, 1));
         line-height: 1.35;
       }
 
@@ -39,7 +39,7 @@
 
       .expr {
         min-height: 22px;
-        font-size: 14px;
+        font-size: calc(14px * var(--fs-scale, 1));
         letter-spacing: 0.01em;
         word-break: break-word;
         font-variant-numeric: tabular-nums;
@@ -47,7 +47,7 @@
       }
 
       .result {
-        font-size: 22px;
+        font-size: calc(22px * var(--fs-scale, 1));
         font-weight: 900;
         letter-spacing: -0.01em;
         font-variant-numeric: tabular-nums;
@@ -74,14 +74,14 @@
         border-radius: 14px;
         cursor: pointer;
         font-weight: 900;
-        font-size: 16px;
+        font-size: calc(16px * var(--fs-scale, 1));
         user-select: none;
       }
 
       @media (max-width: 520px) {
         .key {
           padding: 12px 8px;
-          font-size: 15px;
+          font-size: calc(15px * var(--fs-scale, 1));
         }
       }
 
@@ -118,7 +118,7 @@
         background: rgba(255, 255, 255, 0.04);
         padding: 6px 10px;
         border-radius: 999px;
-        font-size: 12px;
+        font-size: calc(12px * var(--fs-scale, 1));
         font-weight: 800;
         user-select: none;
         cursor: pointer;
@@ -143,7 +143,7 @@
         padding: 8px 12px;
         border-radius: 999px;
         font-weight: 900;
-        font-size: 12px;
+        font-size: calc(12px * var(--fs-scale, 1));
         cursor: pointer;
         user-select: none;
       }
@@ -190,7 +190,7 @@
       }
 
       .tool label {
-        font-size: 12px;
+        font-size: calc(12px * var(--fs-scale, 1));
         font-weight: 900;
         color: rgba(255, 255, 255, 0.7);
       }
@@ -203,7 +203,7 @@
         color: rgba(255, 255, 255, 0.92);
         padding: 10px 10px;
         outline: none;
-        font-size: 14px;
+        font-size: calc(14px * var(--fs-scale, 1));
         line-height: 1.35;
       }
 
@@ -226,7 +226,7 @@
         border-radius: 12px;
         cursor: pointer;
         font-weight: 900;
-        font-size: 13px;
+        font-size: calc(13px * var(--fs-scale, 1));
         user-select: none;
       }
 
@@ -256,7 +256,7 @@
       .note2 {
         margin-top: 10px;
         color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
+        font-size: calc(12px * var(--fs-scale, 1));
         line-height: 1.4;
       }
 
@@ -318,7 +318,7 @@
                 <input id="coefC" class="calc-field" type="text" value="-4" placeholder="c" />
                 <input id="coefD" class="calc-field" type="text" value="0" placeholder="d" />
               </div>
-              <div style="margin-top:6px; font-size:12px; color: rgba(255,255,255,0.62);">
+              <div style="margin-top:6px; font-size: calc(12px * var(--fs-scale, 1)); color: rgba(255,255,255,0.62);">
                 Hiểu là: <span class="mono">a·x^3 + b·x^2 + c·x + d = 0</span> (để bậc 2 thì đặt a=0; bậc 1 thì đặt a=b=0)
               </div>
             </div>
@@ -329,7 +329,7 @@
                 <input id="eqGuess" class="calc-field" type="text" value="1" placeholder="x0 (initial guess)" />
                 <input id="eqVar" class="calc-field" type="text" value="x" placeholder="biến (mặc định x)" />
               </div>
-              <div style="margin-top:6px; font-size:12px; color: rgba(255,255,255,0.62);">
+              <div style="margin-top:6px; font-size: calc(12px * var(--fs-scale, 1)); color: rgba(255,255,255,0.62);">
                 Dùng cho nghiệm thực; với nhiều nghiệm bạn đổi <span class="mono">x0</span> để tìm nghiệm khác.
               </div>
             </div>
@@ -427,6 +427,32 @@
       let ansValue = 0;
       let showSci = false;
       let toolMode = "calc";
+
+      const isCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+      (function applyFontScaleFromQuery() {
+        try {
+          const p = new URLSearchParams(window.location.search);
+          const rawPx = p.get("fspx");
+          if (rawPx) {
+            const px = Number(rawPx);
+            if (Number.isFinite(px)) {
+              const clampedPx = Math.min(24, Math.max(12, px));
+              document.documentElement.style.setProperty("--fs-scale", String(clampedPx / 16));
+              return;
+            }
+          }
+
+          const raw = p.get("fs");
+          if (!raw) return;
+          const n = Number(raw);
+          if (!Number.isFinite(n)) return;
+          const clamped = Math.min(140, Math.max(85, n));
+          document.documentElement.style.setProperty("--fs-scale", String(clamped / 100));
+        } catch {
+          // ignore
+        }
+      })();
 
       const SCI_KEYS = [
         { t: "RAD", a: "toggleAngle", cls: "secondary" },
@@ -529,6 +555,35 @@
         const tag = el.tagName;
         if (tag !== "INPUT" && tag !== "TEXTAREA") return false;
         return el.classList.contains("calc-field") || el === exprInput;
+      }
+
+      function applyCalculatorKeyboardLock() {
+        if (!isCoarsePointer) return;
+
+        const fields = document.querySelectorAll("#exprInput, .calc-field");
+        for (const el of fields) {
+          try {
+            el.setAttribute("readonly", "readonly");
+            el.setAttribute("inputmode", "none");
+            el.setAttribute("autocomplete", "off");
+            el.setAttribute("autocorrect", "off");
+            el.setAttribute("autocapitalize", "off");
+            el.setAttribute("spellcheck", "false");
+          } catch {
+            // ignore
+          }
+        }
+
+        // block physical/virtual keyboard events (calculator is button-only)
+        window.addEventListener(
+          "keydown",
+          (e) => {
+            if (e.key === "Tab") return;
+            e.preventDefault();
+            e.stopPropagation();
+          },
+          { capture: true }
+        );
       }
 
       function activeField() {
@@ -1106,6 +1161,7 @@
 
       function waitForLibs() {
         if (window.math && window.katex) {
+          applyCalculatorKeyboardLock();
           applySciMode();
           setExpr(getExpr(), { focus: false });
           setToolMode("calc");

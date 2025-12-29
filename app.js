@@ -53,6 +53,9 @@ const TOOLS = {
   },
 };
 
+const FONT_PX_KEY = "xaydung_font_px";
+const FONT_BASE_PX = 16;
+
 function byId(id) {
   return document.getElementById(id);
 }
@@ -83,6 +86,55 @@ function formatNumber(n, digits = 2) {
     minimumFractionDigits: 0,
     maximumFractionDigits: digits,
   });
+}
+
+function clamp(n, min, max) {
+  if (!Number.isFinite(n)) return min;
+  return Math.min(max, Math.max(min, n));
+}
+
+function getFontPx() {
+  const raw = localStorage.getItem(FONT_PX_KEY);
+  const n = Number(raw);
+  const fallback = FONT_BASE_PX;
+  return clamp(Number.isFinite(n) ? n : fallback, 12, 24);
+}
+
+function setFontPx(px) {
+  const p = clamp(Number(px), 12, 24);
+  localStorage.setItem(FONT_PX_KEY, String(p));
+  applyFontPx(p);
+}
+
+function applyFontPx(px) {
+  const p = clamp(Number(px), 12, 24);
+  const scale = p / FONT_BASE_PX;
+  const percent = Math.round(scale * 100);
+
+  document.documentElement.style.setProperty("--fs-scale", String(scale));
+
+  const elVal = document.getElementById("fontScaleVal");
+  if (elVal) elVal.textContent = `${p}px (${percent}%)`;
+}
+
+function getFontScalePercent() {
+  const px = getFontPx();
+  return Math.round((px / FONT_BASE_PX) * 100);
+}
+
+function addFontScaleToUrl(url) {
+  const px = getFontPx();
+  const percent = getFontScalePercent();
+  let out = String(url);
+  if (!out.includes("fspx=")) {
+    const sep = out.includes("?") ? "&" : "?";
+    out = `${out}${sep}fspx=${encodeURIComponent(String(px))}`;
+  }
+  if (!out.includes("fs=")) {
+    const sep = out.includes("?") ? "&" : "?";
+    out = `${out}${sep}fs=${encodeURIComponent(String(percent))}`;
+  }
+  return out;
 }
 
 function moduleStorageKey(moduleKey) {
@@ -340,6 +392,8 @@ function buildModuleUrl(model, modulePath) {
     cementBagKg: String(model.cementBagKg),
     priceConcreteM3: String(model.priceConcreteM3),
     priceSteelKg: String(model.priceSteelKg),
+    fspx: String(getFontPx()),
+    fs: String(getFontScalePercent()),
   });
   return `${modulePath}?${params.toString()}`;
 }
@@ -436,7 +490,7 @@ function openPopup({ title, url }) {
 
   const iframe = document.createElement("iframe");
   iframe.className = "popup-iframe";
-  const baseUrl = url;
+  const baseUrl = addFontScaleToUrl(url);
   iframe.src = baseUrl;
 
   body.appendChild(iframe);
@@ -696,6 +750,29 @@ function setDefaults() {
 }
 
 function bindEvents() {
+  // Mobile/tablet: force numeric keyboard for number inputs
+  const numberInputs = document.querySelectorAll('input[type="number"]');
+  for (const el of numberInputs) {
+    if (el.hasAttribute("inputmode")) continue;
+    const stepAttr = String(el.getAttribute("step") || "").trim();
+    const isInteger = stepAttr === "" || stepAttr === "1" || stepAttr === "0";
+    el.setAttribute("inputmode", isInteger ? "numeric" : "decimal");
+    el.setAttribute("pattern", isInteger ? "[0-9]*" : "[0-9]*[.,]?[0-9]*");
+  }
+
+  applyFontPx(getFontPx());
+
+  const btnDec = document.getElementById("fontDec");
+  const btnInc = document.getElementById("fontInc");
+  if (btnDec)
+    btnDec.addEventListener("click", () => {
+      setFontPx(getFontPx() - 1);
+    });
+  if (btnInc)
+    btnInc.addEventListener("click", () => {
+      setFontPx(getFontPx() + 1);
+    });
+
   const inputs = document.querySelectorAll("input");
   for (const el of inputs) {
     el.addEventListener("input", recalc);
@@ -709,7 +786,7 @@ function bindEvents() {
     btnOpenCalc.addEventListener("click", () => {
       openPopup({
         title: TOOLS.calculator.title,
-        url: TOOLS.calculator.url,
+        url: addFontScaleToUrl(TOOLS.calculator.url),
       });
     });
   }
