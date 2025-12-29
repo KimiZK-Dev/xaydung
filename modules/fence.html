@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Lan can / Cổng / Hàng rào</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Lan can / Cổng / Hàng rào</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Lan can ban công (m)</span>
+          <input id="balconyRailM" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá lan can (VNĐ / m)</span>
+          <input id="priceRailM" type="number" inputmode="numeric" step="1000" min="0" value="650000" />
+        </label>
+
+        <label class="field">
+          <span>Hàng rào (m)</span>
+          <input id="fenceM" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá hàng rào (VNĐ / m)</span>
+          <input id="priceFenceM" type="number" inputmode="numeric" step="1000" min="0" value="950000" />
+        </label>
+
+        <label class="field">
+          <span>Cổng (cái)</span>
+          <input id="gateCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cổng (VNĐ / cái)</span>
+          <input id="priceGate" type="number" inputmode="numeric" step="100000" min="0" value="12000000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Nhóm này thường “ngoài hợp đồng” nếu không chốt từ đầu.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "fence";
+
+      function compute() {
+        const balconyRailM = clampNonNegative(num(byId("balconyRailM").value));
+        const priceRailM = clampNonNegative(num(byId("priceRailM").value));
+
+        const fenceM = clampNonNegative(num(byId("fenceM").value));
+        const priceFenceM = clampNonNegative(num(byId("priceFenceM").value));
+
+        const gateCount = Math.round(clampNonNegative(num(byId("gateCount").value)));
+        const priceGate = clampNonNegative(num(byId("priceGate").value));
+
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const subtotal = balconyRailM * priceRailM + fenceM * priceFenceM + gateCount * priceGate + otherCost;
+        return { subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

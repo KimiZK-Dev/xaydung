@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Cầu thang</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Cầu thang</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Loại cầu thang</span>
+          <select id="stairsType">
+            <option value="rc">BTCT (bê tông cốt thép)</option>
+            <option value="steel">Khung sắt</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Số thang (vế)</span>
+          <input id="stairsCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Diện tích ốp hoàn thiện / 1 thang (m²)</span>
+          <input id="finishAreaPerStair" type="number" inputmode="decimal" step="0.1" min="0" value="12" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá hoàn thiện (đá/gỗ/ốp) (VNĐ / m²)</span>
+          <input id="priceFinishM2" type="number" inputmode="numeric" step="1000" min="0" value="750000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí thô / 1 thang (VNĐ)</span>
+          <input id="roughCostPerStair" type="number" inputmode="numeric" step="100000" min="0" value="12000000" />
+        </label>
+
+        <label class="field">
+          <span>Tay vịn (VNĐ / 1 thang)</span>
+          <input id="handrailPerStair" type="number" inputmode="numeric" step="100000" min="0" value="4500000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công (VNĐ / 1 thang)</span>
+          <input id="laborPerStair" type="number" inputmode="numeric" step="100000" min="0" value="3500000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Gợi ý: số tầng</div><div id="outFloors" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Cầu thang thường bị đội giá nếu gộp vào m² sàn. Module này tính theo “số thang” + hoàn thiện.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "stairs";
+      const base = getBaseModelFromQuery();
+
+      function presetByType() {
+        const t = byId("stairsType").value;
+        if (t === "rc") {
+          byId("roughCostPerStair").value = 12000000;
+          byId("handrailPerStair").value = 4500000;
+          byId("laborPerStair").value = 3500000;
+          byId("finishAreaPerStair").value = 12;
+          byId("priceFinishM2").value = 750000;
+        }
+        if (t === "steel") {
+          byId("roughCostPerStair").value = 9000000;
+          byId("handrailPerStair").value = 3800000;
+          byId("laborPerStair").value = 2500000;
+          byId("finishAreaPerStair").value = 10;
+          byId("priceFinishM2").value = 650000;
+        }
+        recalc();
+      }
+
+      function compute() {
+        const stairsCount = Math.round(clampNonNegative(num(byId("stairsCount").value)));
+        const finishAreaPerStair = clampNonNegative(num(byId("finishAreaPerStair").value));
+        const priceFinishM2 = clampNonNegative(num(byId("priceFinishM2").value));
+        const roughCostPerStair = clampNonNegative(num(byId("roughCostPerStair").value));
+        const handrailPerStair = clampNonNegative(num(byId("handrailPerStair").value));
+        const laborPerStair = clampNonNegative(num(byId("laborPerStair").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const finishCost = stairsCount * finishAreaPerStair * priceFinishM2;
+        const subtotal = stairsCount * (roughCostPerStair + handrailPerStair + laborPerStair) + finishCost + otherCost;
+
+        return { subtotal };
+      }
+
+      function recalc() {
+        byId("outFloors").textContent = String(base.floors);
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      byId("stairsType").addEventListener("change", presetByType);
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      presetByType();
+      recalc();
+    </script>
+  </body>
+</html>

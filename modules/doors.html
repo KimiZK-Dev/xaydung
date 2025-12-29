@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Cửa</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Cửa</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Cửa chính (bộ)</span>
+          <input id="mainDoorCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cửa chính (VNĐ / bộ)</span>
+          <input id="priceMainDoor" type="number" inputmode="numeric" step="100000" min="0" value="18000000" />
+        </label>
+
+        <label class="field">
+          <span>Cửa phòng (bộ)</span>
+          <input id="roomDoorCount" type="number" inputmode="numeric" step="1" min="0" value="3" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cửa phòng (VNĐ / bộ)</span>
+          <input id="priceRoomDoor" type="number" inputmode="numeric" step="100000" min="0" value="4500000" />
+        </label>
+
+        <label class="field">
+          <span>Cửa WC (bộ)</span>
+          <input id="wcDoorCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cửa WC (VNĐ / bộ)</span>
+          <input id="priceWcDoor" type="number" inputmode="numeric" step="100000" min="0" value="2200000" />
+        </label>
+
+        <label class="field">
+          <span>Cửa sổ (m²)</span>
+          <input id="windowArea" type="number" inputmode="decimal" step="0.1" min="0" value="10" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cửa sổ (VNĐ / m²)</span>
+          <input id="priceWindowM2" type="number" inputmode="numeric" step="1000" min="0" value="1350000" />
+        </label>
+
+        <label class="field">
+          <span>Phụ kiện (khóa/bản lề) (VNĐ)</span>
+          <input id="hardwareCost" type="number" inputmode="numeric" step="1000" min="0" value="4000000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công lắp đặt (VNĐ)</span>
+          <input id="laborCost" type="number" inputmode="numeric" step="1000" min="0" value="3500000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Cửa là nhóm dễ “ngoài gói”. Nên nhập số lượng/diện tích và đơn giá theo vật liệu thực tế (nhôm kính/gỗ/sắt).</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "doors";
+
+      function compute() {
+        const mainDoorCount = Math.round(clampNonNegative(num(byId("mainDoorCount").value)));
+        const priceMainDoor = clampNonNegative(num(byId("priceMainDoor").value));
+
+        const roomDoorCount = Math.round(clampNonNegative(num(byId("roomDoorCount").value)));
+        const priceRoomDoor = clampNonNegative(num(byId("priceRoomDoor").value));
+
+        const wcDoorCount = Math.round(clampNonNegative(num(byId("wcDoorCount").value)));
+        const priceWcDoor = clampNonNegative(num(byId("priceWcDoor").value));
+
+        const windowArea = clampNonNegative(num(byId("windowArea").value));
+        const priceWindowM2 = clampNonNegative(num(byId("priceWindowM2").value));
+
+        const hardwareCost = clampNonNegative(num(byId("hardwareCost").value));
+        const laborCost = clampNonNegative(num(byId("laborCost").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const subtotal =
+          mainDoorCount * priceMainDoor +
+          roomDoorCount * priceRoomDoor +
+          wcDoorCount * priceWcDoor +
+          windowArea * priceWindowM2 +
+          hardwareCost +
+          laborCost +
+          otherCost;
+
+        return { subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

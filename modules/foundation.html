@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Móng</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Móng</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Loại móng</span>
+          <select id="foundationType">
+            <option value="strip">Móng băng</option>
+            <option value="single">Móng đơn</option>
+            <option value="raft">Móng bè</option>
+            <option value="pile">Móng cọc (ước tính theo m²)</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Hệ số mái/địa chất (nhân)</span>
+          <input id="siteFactor" type="number" inputmode="decimal" step="0.01" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đào đất (m³ / m² móng)</span>
+          <input id="excavationM3PerM2" type="number" inputmode="decimal" step="0.001" min="0" value="0.35" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá đào đất (VNĐ / m³)</span>
+          <input id="priceExcavationM3" type="number" inputmode="numeric" step="1000" min="0" value="120000" />
+        </label>
+
+        <label class="field">
+          <span>Bê tông móng (m³ / m² móng)</span>
+          <input id="concreteM3PerM2" type="number" inputmode="decimal" step="0.001" min="0" value="0.18" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá bê tông (VNĐ / m³)</span>
+          <input id="priceConcreteM3" type="number" inputmode="numeric" step="1000" min="0" value="1250000" />
+        </label>
+
+        <label class="field">
+          <span>Thép móng (kg / m² móng)</span>
+          <input id="steelKgPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="30" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá thép (VNĐ / kg)</span>
+          <input id="priceSteelKg" type="number" inputmode="numeric" step="100" min="0" value="16500" />
+        </label>
+
+        <label class="field">
+          <span>Cốt pha (m² / m² móng)</span>
+          <input id="formworkM2PerM2" type="number" inputmode="decimal" step="0.01" min="0" value="0.9" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá cốt pha (VNĐ / m²)</span>
+          <input id="priceFormworkM2" type="number" inputmode="numeric" step="1000" min="0" value="180000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công móng (VNĐ / m² móng)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="650000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Diện tích móng (m²)</div><div id="outBaseArea" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Móng tính theo diện tích footprint x*y. Bạn chỉnh định mức/đơn giá để sát thực tế.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "foundation";
+      const base = getBaseModelFromQuery();
+
+      function presetByType() {
+        const t = byId("foundationType").value;
+        if (t === "single") {
+          byId("excavationM3PerM2").value = 0.25;
+          byId("concreteM3PerM2").value = 0.14;
+          byId("steelKgPerM2").value = 22;
+          byId("formworkM2PerM2").value = 0.7;
+          byId("laborPerM2").value = 520000;
+        }
+        if (t === "strip") {
+          byId("excavationM3PerM2").value = 0.35;
+          byId("concreteM3PerM2").value = 0.18;
+          byId("steelKgPerM2").value = 30;
+          byId("formworkM2PerM2").value = 0.9;
+          byId("laborPerM2").value = 650000;
+        }
+        if (t === "raft") {
+          byId("excavationM3PerM2").value = 0.45;
+          byId("concreteM3PerM2").value = 0.26;
+          byId("steelKgPerM2").value = 45;
+          byId("formworkM2PerM2").value = 1.1;
+          byId("laborPerM2").value = 820000;
+        }
+        if (t === "pile") {
+          byId("excavationM3PerM2").value = 0.25;
+          byId("concreteM3PerM2").value = 0.20;
+          byId("steelKgPerM2").value = 38;
+          byId("formworkM2PerM2").value = 0.8;
+          byId("laborPerM2").value = 950000;
+          byId("otherCost").value = 25000000;
+        }
+        recalc();
+      }
+
+      function compute() {
+        const baseArea = base.x * base.y;
+
+        const siteFactor = Math.max(0, num(byId("siteFactor").value) || 1);
+        const excavationM3PerM2 = clampNonNegative(num(byId("excavationM3PerM2").value));
+        const priceExcavationM3 = clampNonNegative(num(byId("priceExcavationM3").value));
+
+        const concreteM3PerM2 = clampNonNegative(num(byId("concreteM3PerM2").value));
+        const priceConcreteM3 = clampNonNegative(num(byId("priceConcreteM3").value));
+
+        const steelKgPerM2 = clampNonNegative(num(byId("steelKgPerM2").value));
+        const priceSteelKg = clampNonNegative(num(byId("priceSteelKg").value));
+
+        const formworkM2PerM2 = clampNonNegative(num(byId("formworkM2PerM2").value));
+        const priceFormworkM2 = clampNonNegative(num(byId("priceFormworkM2").value));
+
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const excavationCost = baseArea * excavationM3PerM2 * priceExcavationM3;
+        const concreteCost = baseArea * concreteM3PerM2 * priceConcreteM3;
+        const steelCost = baseArea * steelKgPerM2 * priceSteelKg;
+        const formworkCost = baseArea * formworkM2PerM2 * priceFormworkM2;
+        const laborCost = baseArea * laborPerM2;
+
+        const subtotal = (excavationCost + concreteCost + steelCost + formworkCost + laborCost + otherCost) * siteFactor;
+
+        return {
+          baseArea,
+          subtotal,
+        };
+      }
+
+      function recalc() {
+        byId("priceConcreteM3").value = byId("priceConcreteM3").value || base.priceConcreteM3;
+        byId("priceSteelKg").value = byId("priceSteelKg").value || base.priceSteelKg;
+
+        const out = compute();
+        byId("outBaseArea").textContent = formatNumber(out.baseArea, 2);
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      byId("foundationType").addEventListener("change", presetByType);
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      onModuleSaved((msg) => {
+        if (msg.moduleKey !== MODULE_KEY) return;
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      presetByType();
+      recalc();
+    </script>
+  </body>
+</html>

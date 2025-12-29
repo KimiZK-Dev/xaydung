@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Ốp lát</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Ốp lát</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Lát nền (m²)</span>
+          <input id="floorTileArea" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá lát nền (VNĐ / m²)</span>
+          <input id="priceFloorTileM2" type="number" inputmode="numeric" step="1000" min="0" value="260000" />
+        </label>
+
+        <label class="field">
+          <span>Ốp tường (m²)</span>
+          <input id="wallTileArea" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá ốp tường (VNĐ / m²)</span>
+          <input id="priceWallTileM2" type="number" inputmode="numeric" step="1000" min="0" value="280000" />
+        </label>
+
+        <label class="field">
+          <span>Hao hụt ốp lát (hệ số)</span>
+          <input id="wasteFactor" type="number" inputmode="decimal" step="0.01" min="1" value="1.08" />
+        </label>
+
+        <label class="field">
+          <span>Keo dán + chà ron (VNĐ / m²)</span>
+          <input id="adhesivePerM2" type="number" inputmode="numeric" step="1000" min="0" value="45000" />
+        </label>
+
+        <label class="field">
+          <span>Len chân tường (m / m² sàn)</span>
+          <input id="skirtingMPerM2" type="number" inputmode="decimal" step="0.01" min="0" value="0.35" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá len (VNĐ / m)</span>
+          <input id="priceSkirtingM" type="number" inputmode="numeric" step="1000" min="0" value="35000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công ốp lát (VNĐ / m²)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="95000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Tách ốp tường WC/bếp, len chân tường và keo chà ron để tránh bị “ngoài gói”.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnAuto" class="btn secondary" type="button">Gợi ý theo nhà</button>
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "tiling";
+      const base = getBaseModelFromQuery();
+
+      function autoSuggest() {
+        const floorArea = base.x * base.y * base.floors;
+        const wallArea = 2 * (base.x + base.y) * base.z * base.floors;
+        byId("floorTileArea").value = Math.round(floorArea);
+        byId("wallTileArea").value = Math.round(Math.max(0, wallArea * 0.15));
+        recalc();
+      }
+
+      function compute() {
+        const floorTileArea = clampNonNegative(num(byId("floorTileArea").value));
+        const priceFloorTileM2 = clampNonNegative(num(byId("priceFloorTileM2").value));
+        const wallTileArea = clampNonNegative(num(byId("wallTileArea").value));
+        const priceWallTileM2 = clampNonNegative(num(byId("priceWallTileM2").value));
+        const wasteFactor = Math.max(1, clampNonNegative(num(byId("wasteFactor").value)) || 1);
+        const adhesivePerM2 = clampNonNegative(num(byId("adhesivePerM2").value));
+        const skirtingMPerM2 = clampNonNegative(num(byId("skirtingMPerM2").value));
+        const priceSkirtingM = clampNonNegative(num(byId("priceSkirtingM").value));
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const areaTotal = (floorTileArea + wallTileArea) * wasteFactor;
+        const tileCost = floorTileArea * priceFloorTileM2 + wallTileArea * priceWallTileM2;
+        const adhesiveCost = areaTotal * adhesivePerM2;
+
+        const floorArea = base.x * base.y * base.floors;
+        const skirtingCost = floorArea * skirtingMPerM2 * priceSkirtingM;
+
+        const laborCost = areaTotal * laborPerM2;
+
+        const subtotal = tileCost + adhesiveCost + skirtingCost + laborCost + otherCost;
+        return { subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+      byId("btnAuto").addEventListener("click", autoSuggest);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

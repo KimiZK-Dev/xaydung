@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Trần</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Trần</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Loại trần</span>
+          <select id="ceilingType">
+            <option value="gypsum">Trần thạch cao</option>
+            <option value="plastic">Trần nhựa</option>
+            <option value="paint">Trần bê tông sơn</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Hệ số diện tích trần (nhân)</span>
+          <input id="areaFactor" type="number" inputmode="decimal" step="0.01" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá trần (VNĐ / m²)</span>
+          <input id="priceCeilingM2" type="number" inputmode="numeric" step="1000" min="0" value="165000" />
+        </label>
+
+        <label class="field">
+          <span>Đèn hắt/giật cấp (VNĐ / m² trần)</span>
+          <input id="featurePerM2" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công (VNĐ / m² trần)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="35000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Diện tích trần (m²)</div><div id="outArea" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Trần thạch cao/giật cấp là hạng mục dễ phát sinh. Bạn có thể tăng “đèn hắt/giật cấp”.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "ceiling";
+      const base = getBaseModelFromQuery();
+
+      function presetByType() {
+        const t = byId("ceilingType").value;
+        if (t === "gypsum") {
+          byId("priceCeilingM2").value = 165000;
+          byId("laborPerM2").value = 35000;
+          byId("featurePerM2").value = 0;
+        }
+        if (t === "plastic") {
+          byId("priceCeilingM2").value = 145000;
+          byId("laborPerM2").value = 28000;
+          byId("featurePerM2").value = 0;
+        }
+        if (t === "paint") {
+          byId("priceCeilingM2").value = 45000;
+          byId("laborPerM2").value = 18000;
+          byId("featurePerM2").value = 0;
+        }
+        recalc();
+      }
+
+      function compute() {
+        const floorArea = base.x * base.y * base.floors;
+        const areaFactor = Math.max(0, num(byId("areaFactor").value) || 1);
+        const area = floorArea * areaFactor;
+
+        const priceCeilingM2 = clampNonNegative(num(byId("priceCeilingM2").value));
+        const featurePerM2 = clampNonNegative(num(byId("featurePerM2").value));
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const subtotal = area * (priceCeilingM2 + featurePerM2 + laborPerM2) + otherCost;
+        return { area, subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outArea").textContent = formatNumber(out.area, 2);
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      byId("ceilingType").addEventListener("change", presetByType);
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      presetByType();
+      recalc();
+    </script>
+  </body>
+</html>

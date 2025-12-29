@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Máy tính</title>
+    <link rel="stylesheet" href="common.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjs@11.11.2/lib/browser/math.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <style>
+      .screen {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.22);
+        padding: 10px 12px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .expr-input {
+        width: 100%;
+        min-height: 44px;
+        resize: none;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.92);
+        padding: 10px 10px;
+        outline: none;
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .expr-input:focus {
+        border-color: rgba(124, 92, 255, 0.7);
+        box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.22);
+      }
+
+      .expr {
+        min-height: 22px;
+        font-size: 14px;
+        letter-spacing: 0.01em;
+        word-break: break-word;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.92;
+      }
+
+      .result {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kbd {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      @media (max-width: 520px) {
+        .kbd {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      .key {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        padding: 12px 10px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 900;
+        font-size: 16px;
+        user-select: none;
+      }
+
+      @media (max-width: 520px) {
+        .key {
+          padding: 12px 8px;
+          font-size: 15px;
+        }
+      }
+
+      .key:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .key.secondary {
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .key.accent {
+        background: rgba(124, 92, 255, 0.26);
+        border-color: rgba(124, 92, 255, 0.55);
+      }
+
+      .key.wide {
+        grid-column: span 2;
+      }
+
+      .key.wide3 {
+        grid-column: span 3;
+      }
+
+      .badges {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .badge {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        user-select: none;
+        cursor: pointer;
+      }
+
+      .badge.primary {
+        background: rgba(124, 92, 255, 0.18);
+        border-color: rgba(124, 92, 255, 0.55);
+      }
+
+      .tool-tabs {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .tool-tab {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.18);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .tool-tab.active {
+        background: rgba(124, 92, 255, 0.18);
+        border-color: rgba(124, 92, 255, 0.55);
+      }
+
+      .tools {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .tool {
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.16);
+        border-radius: 14px;
+        padding: 10px;
+      }
+
+      .tool.active {
+        display: grid;
+        gap: 10px;
+      }
+
+      .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      @media (max-width: 520px) {
+        .tool-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .tool .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .tool label {
+        font-size: 12px;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .calc-field {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.92);
+        padding: 10px 10px;
+        outline: none;
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .calc-field:focus {
+        border-color: rgba(124, 92, 255, 0.7);
+        box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.22);
+      }
+
+      .tool-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .tool-btn {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        padding: 10px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 900;
+        font-size: 13px;
+        user-select: none;
+      }
+
+      .tool-btn.accent {
+        background: rgba(124, 92, 255, 0.26);
+        border-color: rgba(124, 92, 255, 0.55);
+      }
+
+      .tool-out {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.22);
+        border-radius: 12px;
+        padding: 10px;
+        min-height: 42px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .kbd-sci {
+        display: none;
+      }
+
+      .show-sci .kbd-sci {
+        display: grid;
+      }
+
+      .note2 {
+        margin-top: 10px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Máy tính</h1>
+
+      <div class="screen">
+        <textarea id="exprInput" class="expr-input mono" spellcheck="false" placeholder="Nhập biểu thức… (ví dụ: (2+3)*4, sin(30), pi*2)"></textarea>
+        <div id="outExpr" class="expr mono"></div>
+        <div id="outResult" class="result mono">0</div>
+      </div>
+
+      <div class="badges">
+        <div id="badgeSci" class="badge primary">SCI</div>
+        <div id="badgeAngle" class="badge">RAD</div>
+        <div id="badgeMem" class="badge">M: 0</div>
+        <div id="badgeAns" class="badge">Ans: 0</div>
+      </div>
+
+      <div class="tool-tabs">
+        <button id="tabCalc" class="tool-tab active" type="button">CALC</button>
+        <button id="tabFunc" class="tool-tab" type="button">f(x)</button>
+        <button id="tabSolve" class="tool-tab" type="button">SOLVE</button>
+        <button id="tabDiff" class="tool-tab" type="button">d/dx</button>
+      </div>
+
+      <div class="tools">
+        <div id="toolFunc" class="tool">
+          <div class="tool-grid">
+            <div class="field">
+              <label>Biểu thức f(x)</label>
+              <input id="fxExpr" class="calc-field" type="text" value="x^2" />
+            </div>
+            <div class="field">
+              <label>Giá trị x</label>
+              <input id="fxX" class="calc-field" type="text" value="2" />
+            </div>
+          </div>
+          <div class="tool-actions">
+            <button id="btnEvalFx" class="tool-btn accent" type="button">Tính f(x)</button>
+            <button id="btnCopyFxToMain" class="tool-btn" type="button">Copy → CALC</button>
+          </div>
+          <div id="outFx" class="tool-out mono"></div>
+        </div>
+
+        <div id="toolSolve" class="tool">
+          <div class="tool-grid">
+            <div class="field">
+              <label>Đa thức (bậc 1–3): a, b, c, d</label>
+              <div class="tool-grid">
+                <input id="coefA" class="calc-field" type="text" value="1" placeholder="a" />
+                <input id="coefB" class="calc-field" type="text" value="0" placeholder="b" />
+                <input id="coefC" class="calc-field" type="text" value="-4" placeholder="c" />
+                <input id="coefD" class="calc-field" type="text" value="0" placeholder="d" />
+              </div>
+              <div style="margin-top:6px; font-size:12px; color: rgba(255,255,255,0.62);">
+                Hiểu là: <span class="mono">a·x^3 + b·x^2 + c·x + d = 0</span> (để bậc 2 thì đặt a=0; bậc 1 thì đặt a=b=0)
+              </div>
+            </div>
+            <div class="field">
+              <label>Giải dạng f(x)=0 (Newton)</label>
+              <input id="eqExpr" class="calc-field" type="text" value="x^2-4" placeholder="Ví dụ: x^2-4" />
+              <div class="tool-grid">
+                <input id="eqGuess" class="calc-field" type="text" value="1" placeholder="x0 (initial guess)" />
+                <input id="eqVar" class="calc-field" type="text" value="x" placeholder="biến (mặc định x)" />
+              </div>
+              <div style="margin-top:6px; font-size:12px; color: rgba(255,255,255,0.62);">
+                Dùng cho nghiệm thực; với nhiều nghiệm bạn đổi <span class="mono">x0</span> để tìm nghiệm khác.
+              </div>
+            </div>
+          </div>
+          <div class="tool-actions">
+            <button id="btnSolvePoly" class="tool-btn accent" type="button">Giải bậc 1–3</button>
+            <button id="btnSolveNewton" class="tool-btn" type="button">Newton f(x)=0</button>
+          </div>
+          <div id="outSolve" class="tool-out mono"></div>
+        </div>
+
+        <div id="toolDiff" class="tool">
+          <div class="tool-grid">
+            <div class="field">
+              <label>Biểu thức</label>
+              <input id="diffExpr" class="calc-field" type="text" value="sin(x)+x^2" />
+            </div>
+            <div class="field">
+              <label>Biến</label>
+              <input id="diffVar" class="calc-field" type="text" value="x" />
+            </div>
+          </div>
+          <div class="tool-grid">
+            <div class="field">
+              <label>Tính tại điểm (tuỳ chọn)</label>
+              <input id="diffAt" class="calc-field" type="text" value="" placeholder="Ví dụ: 0, pi/2" />
+            </div>
+            <div class="field">
+              <label>Kết quả</label>
+              <div id="outDiffExpr" class="tool-out mono"></div>
+              <div id="outDiffVal" class="tool-out mono" style="margin-top:10px;"></div>
+            </div>
+          </div>
+          <div class="tool-actions">
+            <button id="btnDiff" class="tool-btn accent" type="button">Đạo hàm</button>
+            <button id="btnDiffCopy" class="tool-btn" type="button">Copy → CALC</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="kbd" id="kbdBasic"></div>
+      <div class="kbd kbd-sci" id="kbdSci"></div>
+
+      <div class="note2">
+        Phím nhanh: số, <span class="mono">+ - * / ( ) .</span>, Enter/= để tính, Backspace xoá 1 ký tự, Esc xoá hết.
+      </div>
+    </div>
+
+    <script>
+      const outExpr = document.getElementById("outExpr");
+      const outResult = document.getElementById("outResult");
+      const exprInput = document.getElementById("exprInput");
+      const kbdBasic = document.getElementById("kbdBasic");
+      const kbdSci = document.getElementById("kbdSci");
+      const badgeSci = document.getElementById("badgeSci");
+      const badgeAngle = document.getElementById("badgeAngle");
+      const badgeMem = document.getElementById("badgeMem");
+      const badgeAns = document.getElementById("badgeAns");
+
+      const tabCalc = document.getElementById("tabCalc");
+      const tabFunc = document.getElementById("tabFunc");
+      const tabSolve = document.getElementById("tabSolve");
+      const tabDiff = document.getElementById("tabDiff");
+      const toolFunc = document.getElementById("toolFunc");
+      const toolSolve = document.getElementById("toolSolve");
+      const toolDiff = document.getElementById("toolDiff");
+
+      const fxExpr = document.getElementById("fxExpr");
+      const fxX = document.getElementById("fxX");
+      const btnEvalFx = document.getElementById("btnEvalFx");
+      const btnCopyFxToMain = document.getElementById("btnCopyFxToMain");
+      const outFx = document.getElementById("outFx");
+
+      const coefA = document.getElementById("coefA");
+      const coefB = document.getElementById("coefB");
+      const coefC = document.getElementById("coefC");
+      const coefD = document.getElementById("coefD");
+      const eqExpr = document.getElementById("eqExpr");
+      const eqGuess = document.getElementById("eqGuess");
+      const eqVar = document.getElementById("eqVar");
+      const btnSolvePoly = document.getElementById("btnSolvePoly");
+      const btnSolveNewton = document.getElementById("btnSolveNewton");
+      const outSolve = document.getElementById("outSolve");
+
+      const diffExpr = document.getElementById("diffExpr");
+      const diffVar = document.getElementById("diffVar");
+      const diffAt = document.getElementById("diffAt");
+      const btnDiff = document.getElementById("btnDiff");
+      const btnDiffCopy = document.getElementById("btnDiffCopy");
+      const outDiffExpr = document.getElementById("outDiffExpr");
+      const outDiffVal = document.getElementById("outDiffVal");
+
+      let angleMode = "RAD";
+      let memoryValue = 0;
+      let ansValue = 0;
+      let showSci = false;
+      let toolMode = "calc";
+
+      const SCI_KEYS = [
+        { t: "RAD", a: "toggleAngle", cls: "secondary" },
+        { t: "sin", a: "func", v: "sin(" },
+        { t: "cos", a: "func", v: "cos(" },
+        { t: "tan", a: "func", v: "tan(" },
+        { t: "π", a: "insert", v: "pi" },
+
+        { t: "asin", a: "func", v: "asin(" },
+        { t: "acos", a: "func", v: "acos(" },
+        { t: "atan", a: "func", v: "atan(" },
+        { t: "√", a: "func", v: "sqrt(" },
+        { t: "^", a: "op", v: "^" },
+
+        { t: "ln", a: "func", v: "ln(" },
+        { t: "log", a: "func", v: "log10(" },
+        { t: "abs", a: "func", v: "abs(" },
+        { t: "!", a: "postfix", v: "!" },
+        { t: "e", a: "insert", v: "e" },
+
+        { t: "φ", a: "insert", v: "phi" },
+        { t: "τ", a: "insert", v: "tau" },
+      ];
+
+      const BASIC_KEYS = [
+        { t: "MC", a: "memClear", cls: "secondary" },
+        { t: "MR", a: "memRecall", cls: "secondary" },
+        { t: "M+", a: "memAdd", cls: "secondary" },
+        { t: "M-", a: "memSub", cls: "secondary" },
+        { t: "Ans", a: "insert", v: "Ans" },
+
+        { t: "(", a: "insert", v: "(" },
+        { t: ")", a: "insert", v: ")" },
+        { t: "÷", a: "op", v: "/" },
+        { t: "×", a: "op", v: "*" },
+        { t: "−", a: "op", v: "-" },
+
+        { t: "7", a: "insert", v: "7" },
+        { t: "8", a: "insert", v: "8" },
+        { t: "9", a: "insert", v: "9" },
+        { t: "+", a: "op", v: "+" },
+        { t: "⌫", a: "backspace", cls: "secondary" },
+
+        { t: "4", a: "insert", v: "4" },
+        { t: "5", a: "insert", v: "5" },
+        { t: "6", a: "insert", v: "6" },
+        { t: ".", a: "insert", v: "." },
+        { t: "AC", a: "clear", cls: "secondary" },
+
+        { t: "1", a: "insert", v: "1" },
+        { t: "2", a: "insert", v: "2" },
+        { t: "3", a: "insert", v: "3" },
+        { t: "0", a: "insert", v: "0" },
+        { t: "=", a: "eval", cls: "accent" },
+      ];
+
+      let btnAngle = null;
+
+      function addKeys(container, keys) {
+        for (const key of keys) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+
+          const parts = ["key"];
+          if (key.cls) {
+            const tokens = String(key.cls).split(/\s+/g).filter(Boolean);
+            for (const t of tokens) parts.push(t);
+          }
+
+          btn.className = Array.from(new Set(parts)).join(" ");
+          btn.textContent = key.t;
+          btn.addEventListener("click", () => handleKey(key));
+          container.appendChild(btn);
+
+          if (key.a === "toggleAngle") btnAngle = btn;
+        }
+      }
+
+      addKeys(kbdBasic, BASIC_KEYS);
+      addKeys(kbdSci, SCI_KEYS);
+
+      function getExpr() {
+        return String(exprInput.value || "");
+      }
+
+      function setExpr(next, { focus = true } = {}) {
+        exprInput.value = String(next ?? "");
+        const pos = exprInput.value.length;
+        try {
+          exprInput.setSelectionRange(pos, pos);
+        } catch {
+          // ignore
+        }
+        if (focus) exprInput.focus();
+      }
+
+      function isCalcField(el) {
+        if (!el) return false;
+        if (!(el instanceof HTMLElement)) return false;
+        const tag = el.tagName;
+        if (tag !== "INPUT" && tag !== "TEXTAREA") return false;
+        return el.classList.contains("calc-field") || el === exprInput;
+      }
+
+      function activeField() {
+        const el = document.activeElement;
+        if (isCalcField(el)) return el;
+        return exprInput;
+      }
+
+      function insertAtCursor(text) {
+        const field = activeField();
+        const s = String(field.value || "");
+        const start = field.selectionStart ?? s.length;
+        const end = field.selectionEnd ?? s.length;
+        const next = s.slice(0, start) + text + s.slice(end);
+        field.value = next;
+        const pos = start + String(text).length;
+        try {
+          field.setSelectionRange(pos, pos);
+        } catch {
+          // ignore
+        }
+        field.focus();
+      }
+
+      function backspaceAtCursor() {
+        const field = activeField();
+        const s = String(field.value || "");
+        const start = field.selectionStart ?? s.length;
+        const end = field.selectionEnd ?? s.length;
+        if (start !== end) {
+          const next = s.slice(0, start) + s.slice(end);
+          field.value = next;
+          try {
+            field.setSelectionRange(start, start);
+          } catch {
+            // ignore
+          }
+          field.focus();
+          return;
+        }
+        if (start <= 0) return;
+        const next = s.slice(0, start - 1) + s.slice(start);
+        field.value = next;
+        const pos = start - 1;
+        try {
+          field.setSelectionRange(pos, pos);
+        } catch {
+          // ignore
+        }
+        field.focus();
+      }
+
+      function shortText(v) {
+        const s = String(v ?? "0");
+        return s.length > 18 ? s.slice(0, 18) + "…" : s;
+      }
+
+      function updateBadges() {
+        badgeAngle.textContent = angleMode;
+        badgeMem.textContent = `M: ${shortText(memoryValue)}`;
+        badgeAns.textContent = `Ans: ${shortText(ansValue)}`;
+        if (btnAngle) btnAngle.textContent = angleMode;
+      }
+
+      function setToolMode(next) {
+        toolMode = next;
+        tabCalc.classList.toggle("active", toolMode === "calc");
+        tabFunc.classList.toggle("active", toolMode === "func");
+        tabSolve.classList.toggle("active", toolMode === "solve");
+        tabDiff.classList.toggle("active", toolMode === "diff");
+
+        toolFunc.classList.toggle("active", toolMode === "func");
+        toolSolve.classList.toggle("active", toolMode === "solve");
+        toolDiff.classList.toggle("active", toolMode === "diff");
+      }
+
+      function prettyText(s) {
+        return String(s)
+          .replace(/\*/g, "×")
+          .replace(/\//g, "÷")
+          .replace(/-/g, "−")
+          .replace(/\bpi\b/gi, "π")
+          .replace(/\bsqrt\(/gi, "√(");
+      }
+
+      function ensureMath() {
+        if (!window.math || !window.katex) return null;
+        if (!window.__xaydung_math) {
+          try {
+            window.__xaydung_math = window.math.create(window.math.all);
+            window.__xaydung_math.config({
+              number: "BigNumber",
+              precision: 64,
+            });
+          } catch {
+            window.__xaydung_math = window.math;
+          }
+        }
+        return window.__xaydung_math;
+      }
+
+      function toBigNumber(m, v) {
+        try {
+          return m.bignumber(v);
+        } catch {
+          return v;
+        }
+      }
+
+      function makeScope(m) {
+        const pi = m.pi;
+        const e = m.e;
+        const phi = m.divide(m.add(1, m.sqrt(5)), 2);
+        const tau = m.multiply(2, pi);
+
+        const degFactor = m.divide(pi, 180);
+        const radToDeg = m.divide(180, pi);
+
+        const toRad = (x) => {
+          if (angleMode !== "DEG") return x;
+          return m.multiply(x, degFactor);
+        };
+
+        const fromRad = (x) => {
+          if (angleMode !== "DEG") return x;
+          return m.multiply(x, radToDeg);
+        };
+
+        const ln = (x) => m.log(x);
+        const log10 = (x) => m.log10(x);
+
+        return {
+          pi,
+          e,
+          phi,
+          tau,
+          Ans: toBigNumber(m, ansValue),
+          M: toBigNumber(m, memoryValue),
+          sin: (x) => m.sin(toRad(x)),
+          cos: (x) => m.cos(toRad(x)),
+          tan: (x) => m.tan(toRad(x)),
+          asin: (x) => fromRad(m.asin(x)),
+          acos: (x) => fromRad(m.acos(x)),
+          atan: (x) => fromRad(m.atan(x)),
+          ln,
+          log10,
+        };
+      }
+
+      function makeScopeWith(m, extra) {
+        return Object.assign({}, makeScope(m), extra || {});
+      }
+
+      function formatAny(m, v) {
+        try {
+          return formatResultStr(m.format(v, { precision: 32 }));
+        } catch {
+          return String(v);
+        }
+      }
+
+      function formatResultStr(s) {
+        if (!s) return "0";
+        const trimmed = String(s)
+          .replace(/\s+/g, "")
+          .replace(/(\.\d*?[1-9])0+$/, "$1")
+          .replace(/\.0+$/, "");
+        return trimmed;
+      }
+
+      function tryRenderExprTeX() {
+        const m = ensureMath();
+        const current = getExpr();
+        if (!m) {
+          outExpr.textContent = prettyText(current);
+          return;
+        }
+        if (!current.trim()) {
+          outExpr.textContent = "";
+          return;
+        }
+        try {
+          const node = m.parse(current);
+          const tex = node.toTex({ parenthesis: "keep" });
+          window.katex.render(tex, outExpr, {
+            throwOnError: false,
+            displayMode: false,
+          });
+        } catch {
+          outExpr.textContent = prettyText(current);
+        }
+      }
+
+      function safeEvaluateToString(input) {
+        const m = ensureMath();
+        if (!m) return null;
+        if (!input || !input.trim()) return "0";
+        try {
+          const scope = makeScope(m);
+          const v = m.evaluate(input, scope);
+          const s = m.format(v, { precision: 32 });
+          const out = formatResultStr(s);
+          ansValue = out;
+          return out;
+        } catch {
+          return null;
+        }
+      }
+
+      function render() {
+        tryRenderExprTeX();
+        const s = safeEvaluateToString(getExpr());
+        outResult.textContent = s === null ? "Error" : s;
+        updateBadges();
+      }
+
+      function handleKey(key) {
+        if (key.a === "toggleAngle") {
+          angleMode = angleMode === "RAD" ? "DEG" : "RAD";
+          render();
+          return;
+        }
+
+        if (key.a === "memClear") {
+          memoryValue = 0;
+          render();
+          return;
+        }
+
+        if (key.a === "memRecall") {
+          insertAtCursor("M");
+          render();
+          return;
+        }
+
+        if (key.a === "memAdd" || key.a === "memSub") {
+          const s = safeEvaluateToString(getExpr());
+          const m = ensureMath();
+          if (!m || s === null) return;
+          try {
+            const v = m.evaluate(s, makeScope(m));
+            const mv = toBigNumber(m, memoryValue);
+            const next = key.a === "memAdd" ? m.add(mv, v) : m.subtract(mv, v);
+            memoryValue = m.format(next, { precision: 32 });
+          } catch {
+            // ignore
+          }
+          render();
+          return;
+        }
+
+        if (key.a === "clear") {
+          if (activeField() === exprInput) setExpr("", { focus: true });
+          else activeField().value = "";
+          render();
+          return;
+        }
+        if (key.a === "backspace") {
+          backspaceAtCursor();
+          render();
+          return;
+        }
+        if (key.a === "eval") {
+          if (activeField() !== exprInput) return;
+          const s = safeEvaluateToString(getExpr());
+          if (s === null) return;
+          setExpr(s, { focus: true });
+          render();
+          return;
+        }
+
+        if (key.a === "func") {
+          insertAtCursor(key.v);
+          render();
+          return;
+        }
+
+        if (key.a === "postfix") {
+          insertAtCursor(key.v);
+          render();
+          return;
+        }
+
+        if (key.a === "insert" || key.a === "op") {
+          insertAtCursor(key.v);
+          render();
+          return;
+        }
+      }
+
+      // ===== Keyboard =====
+
+      function normalizeKey(e) {
+        if (e.key === "Enter") return { a: "eval" };
+        if (e.key === "=") return { a: "eval" };
+        if (e.key === "Backspace") return { a: "backspace" };
+        if (e.key === "Escape") return { a: "clear" };
+
+        const k = e.key;
+        if (k.length === 1) {
+          if ((k >= "0" && k <= "9") || k === "." || k === "+" || k === "-" || k === "*" || k === "/" || k === "(" || k === ")" || k === "^") {
+            return { a: "insert", v: k };
+          }
+        }
+
+        return null;
+      }
+
+      window.addEventListener("keydown", (e) => {
+        const key = normalizeKey(e);
+        if (!key) return;
+        // allow native editing when focus is in any input/textarea
+        if (isCalcField(document.activeElement)) return;
+        e.preventDefault();
+        if (key.a === "insert") {
+          insertAtCursor(key.v);
+          render();
+          return;
+        }
+        handleKey(key);
+      });
+
+      function applySciMode() {
+        document.body.classList.toggle("show-sci", showSci);
+        badgeSci.textContent = showSci ? "SCI" : "BASIC";
+      }
+
+      badgeSci.addEventListener("click", () => {
+        showSci = !showSci;
+        applySciMode();
+      });
+
+      tabCalc.addEventListener("click", () => setToolMode("calc"));
+      tabFunc.addEventListener("click", () => setToolMode("func"));
+      tabSolve.addEventListener("click", () => setToolMode("solve"));
+      tabDiff.addEventListener("click", () => setToolMode("diff"));
+
+      exprInput.addEventListener("input", () => {
+        render();
+      });
+
+      outExpr.addEventListener("click", () => {
+        exprInput.focus();
+      });
+
+      function parseAsNumberOrExpr(m, text) {
+        const s = String(text ?? "").trim();
+        if (!s) return m.bignumber(0);
+        try {
+          return m.evaluate(s, makeScope(m));
+        } catch {
+          return m.bignumber(0);
+        }
+      }
+
+      function solveLinear(m, a, b) {
+        const A = m.complex(a);
+        const B = m.complex(b);
+        if (m.equal(A, 0)) return [];
+        return [m.divide(m.unaryMinus(B), A)];
+      }
+
+      function solveQuadratic(m, a, b, c) {
+        const A = m.complex(a);
+        const B = m.complex(b);
+        const C = m.complex(c);
+        if (m.equal(A, 0)) return solveLinear(m, B, C);
+
+        const fourAC = m.multiply(4, m.multiply(A, C));
+        const disc = m.subtract(m.multiply(B, B), fourAC);
+        const sqrtDisc = m.sqrt(disc);
+        const twoA = m.multiply(2, A);
+        const x1 = m.divide(m.subtract(m.unaryMinus(B), sqrtDisc), twoA);
+        const x2 = m.divide(m.add(m.unaryMinus(B), sqrtDisc), twoA);
+        return [x1, x2];
+      }
+
+      function cbrtComplex(m, z) {
+        return m.pow(z, m.divide(1, 3));
+      }
+
+      function solveCubic(m, a, b, c, d) {
+        const A0 = m.complex(a);
+        const B0 = m.complex(b);
+        const C0 = m.complex(c);
+        const D0 = m.complex(d);
+        if (m.equal(A0, 0)) return solveQuadratic(m, B0, C0, D0);
+
+        // normalize: x^3 + ax2*x^2 + ax1*x + ax0
+        const ax2 = m.divide(B0, A0);
+        const ax1 = m.divide(C0, A0);
+        const ax0 = m.divide(D0, A0);
+
+        // depressed cubic: y^3 + p*y + q = 0, x = y - ax2/3
+        const oneThird = m.divide(1, 3);
+        const ax2Over3 = m.multiply(ax2, oneThird);
+        const ax2Sq = m.multiply(ax2, ax2);
+        const p = m.subtract(ax1, m.divide(ax2Sq, 3));
+        const q = m.add(m.subtract(m.divide(m.multiply(2, m.multiply(ax2Sq, ax2)), 27), m.divide(m.multiply(ax2, ax1), 3)), ax0);
+
+        const halfQ = m.divide(q, 2);
+        const thirdP = m.divide(p, 3);
+        const disc = m.add(m.multiply(halfQ, halfQ), m.multiply(m.multiply(thirdP, thirdP), thirdP));
+        const sqrtDisc = m.sqrt(disc);
+
+        const u = cbrtComplex(m, m.subtract(m.unaryMinus(halfQ), m.unaryMinus(sqrtDisc)));
+        const v = cbrtComplex(m, m.subtract(m.unaryMinus(halfQ), sqrtDisc));
+
+        const y1 = m.add(u, v);
+        const minusHalf = m.divide(-1, 2);
+        const sqrt3Over2 = m.divide(m.sqrt(3), 2);
+        const uvDiff = m.subtract(u, v);
+        const y2 = m.add(m.multiply(minusHalf, y1), m.multiply(m.complex(0, 1), m.multiply(sqrt3Over2, uvDiff)));
+        const y3 = m.subtract(m.multiply(minusHalf, y1), m.multiply(m.complex(0, 1), m.multiply(sqrt3Over2, uvDiff)));
+
+        const x1 = m.subtract(y1, ax2Over3);
+        const x2 = m.subtract(y2, ax2Over3);
+        const x3 = m.subtract(y3, ax2Over3);
+        return [x1, x2, x3];
+      }
+
+      function newtonSolve(m, exprStr, varName, x0) {
+        const v = String(varName || "x").trim() || "x";
+        const ex = String(exprStr || "").trim();
+        if (!ex) return null;
+        const scopeBase = makeScope(m);
+
+        let dNode;
+        try {
+          dNode = m.derivative(ex, v);
+        } catch {
+          return null;
+        }
+
+        let x = m.bignumber(0);
+        try {
+          x = m.bignumber(x0);
+        } catch {
+          try {
+            x = m.evaluate(String(x0 || "0"), scopeBase);
+          } catch {
+            x = m.bignumber(0);
+          }
+        }
+
+        for (let i = 0; i < 30; i++) {
+          const scope = Object.assign({}, scopeBase, { [v]: x });
+          let fx;
+          let dfx;
+          try {
+            fx = m.evaluate(ex, scope);
+            dfx = dNode.evaluate(scope);
+          } catch {
+            return null;
+          }
+
+          try {
+            const step = m.divide(fx, dfx);
+            const next = m.subtract(x, step);
+            const err = m.abs(m.subtract(next, x));
+            x = next;
+            if (m.smaller(err, 1e-12)) break;
+          } catch {
+            return null;
+          }
+        }
+        return x;
+      }
+
+      btnEvalFx.addEventListener("click", () => {
+        const m = ensureMath();
+        if (!m) return;
+        const f = String(fxExpr.value || "").trim();
+        if (!f) {
+          outFx.textContent = "";
+          return;
+        }
+        try {
+          const xVal = parseAsNumberOrExpr(m, fxX.value);
+          const v = m.evaluate(f, makeScopeWith(m, { x: xVal }));
+          outFx.textContent = formatAny(m, v);
+        } catch {
+          outFx.textContent = "Error";
+        }
+      });
+
+      btnCopyFxToMain.addEventListener("click", () => {
+        setExpr(String(fxExpr.value || ""), { focus: true });
+        setToolMode("calc");
+        render();
+      });
+
+      btnSolvePoly.addEventListener("click", () => {
+        const m = ensureMath();
+        if (!m) return;
+        const a = parseAsNumberOrExpr(m, coefA.value);
+        const b = parseAsNumberOrExpr(m, coefB.value);
+        const c = parseAsNumberOrExpr(m, coefC.value);
+        const d = parseAsNumberOrExpr(m, coefD.value);
+        try {
+          const roots = solveCubic(m, a, b, c, d);
+          if (!roots || roots.length === 0) {
+            outSolve.textContent = "Không giải được.";
+            return;
+          }
+          outSolve.textContent = roots.map((r, idx) => `x${idx + 1} = ${formatAny(m, r)}`).join("\n");
+        } catch {
+          outSolve.textContent = "Error";
+        }
+      });
+
+      btnSolveNewton.addEventListener("click", () => {
+        const m = ensureMath();
+        if (!m) return;
+        const ex = String(eqExpr.value || "").trim();
+        const v = String(eqVar.value || "x").trim() || "x";
+        const x0 = String(eqGuess.value || "0").trim();
+        const root = newtonSolve(m, ex, v, x0);
+        if (root === null) {
+          outSolve.textContent = "Không hội tụ / không đạo hàm được / biểu thức lỗi.";
+          return;
+        }
+        outSolve.textContent = `x ≈ ${formatAny(m, root)}`;
+      });
+
+      btnDiff.addEventListener("click", () => {
+        const m = ensureMath();
+        if (!m) return;
+        const ex = String(diffExpr.value || "").trim();
+        const v = String(diffVar.value || "x").trim() || "x";
+        if (!ex) {
+          outDiffExpr.textContent = "";
+          outDiffVal.textContent = "";
+          return;
+        }
+        try {
+          const dNode = m.derivative(ex, v);
+          const tex = dNode.toTex({ parenthesis: "keep" });
+          try {
+            window.katex.render(tex, outDiffExpr, { throwOnError: false, displayMode: false });
+          } catch {
+            outDiffExpr.textContent = dNode.toString();
+          }
+
+          const at = String(diffAt.value || "").trim();
+          if (!at) {
+            outDiffVal.textContent = "";
+            return;
+          }
+
+          const xVal = parseAsNumberOrExpr(m, at);
+          const val = dNode.evaluate(makeScopeWith(m, { [v]: xVal }));
+          outDiffVal.textContent = `= ${formatAny(m, val)}`;
+        } catch {
+          outDiffExpr.textContent = "Error";
+          outDiffVal.textContent = "";
+        }
+      });
+
+      btnDiffCopy.addEventListener("click", () => {
+        const m = ensureMath();
+        if (!m) return;
+        const ex = String(diffExpr.value || "").trim();
+        const v = String(diffVar.value || "x").trim() || "x";
+        if (!ex) return;
+        try {
+          const dNode = m.derivative(ex, v);
+          setExpr(dNode.toString(), { focus: true });
+          setToolMode("calc");
+          render();
+        } catch {
+          // ignore
+        }
+      });
+
+      function waitForLibs() {
+        if (window.math && window.katex) {
+          applySciMode();
+          setExpr(getExpr(), { focus: false });
+          setToolMode("calc");
+          render();
+          return;
+        }
+        setTimeout(waitForLibs, 40);
+      }
+
+      waitForLibs();
+    </script>
+  </body>
+</html>

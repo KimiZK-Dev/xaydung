@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Chi phí gián tiếp</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Chi phí gián tiếp</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Xin phép xây dựng (VNĐ)</span>
+          <input id="permitCost" type="number" inputmode="numeric" step="1000" min="0" value="8000000" />
+        </label>
+
+        <label class="field">
+          <span>Thiết kế (VNĐ)</span>
+          <input id="designCost" type="number" inputmode="numeric" step="1000" min="0" value="15000000" />
+        </label>
+
+        <label class="field">
+          <span>Giám sát (VNĐ)</span>
+          <input id="supervisionCost" type="number" inputmode="numeric" step="1000" min="0" value="12000000" />
+        </label>
+
+        <label class="field">
+          <span>Điện nước tạm (VNĐ)</span>
+          <input id="temporaryUtilities" type="number" inputmode="numeric" step="1000" min="0" value="3000000" />
+        </label>
+
+        <label class="field">
+          <span>Vận chuyển vật tư (VNĐ)</span>
+          <input id="transportCost" type="number" inputmode="numeric" step="1000" min="0" value="8000000" />
+        </label>
+
+        <label class="field">
+          <span>Thu dọn xà bần (VNĐ)</span>
+          <input id="debrisCost" type="number" inputmode="numeric" step="1000" min="0" value="6000000" />
+        </label>
+
+        <label class="field">
+          <span>Hệ số điều kiện thi công (hẻm/tầng cao...) (nhân)</span>
+          <input id="conditionFactor" type="number" inputmode="decimal" step="0.01" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Tách các khoản gián tiếp để tránh bị quên hoặc bị nhà thầu cộng ngoài.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "indirect";
+
+      function compute() {
+        const permitCost = clampNonNegative(num(byId("permitCost").value));
+        const designCost = clampNonNegative(num(byId("designCost").value));
+        const supervisionCost = clampNonNegative(num(byId("supervisionCost").value));
+        const temporaryUtilities = clampNonNegative(num(byId("temporaryUtilities").value));
+        const transportCost = clampNonNegative(num(byId("transportCost").value));
+        const debrisCost = clampNonNegative(num(byId("debrisCost").value));
+        const conditionFactor = Math.max(0, num(byId("conditionFactor").value) || 1);
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const subtotal =
+          (permitCost +
+            designCost +
+            supervisionCost +
+            temporaryUtilities +
+            transportCost +
+            debrisCost +
+            otherCost) *
+          conditionFactor;
+
+        return { subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

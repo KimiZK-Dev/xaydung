@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Nước</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Nước</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Ống cấp (m / m² sàn)</span>
+          <input id="supplyPipeMPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="1.2" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá ống cấp (VNĐ / m)</span>
+          <input id="priceSupplyPipeM" type="number" inputmode="numeric" step="1000" min="0" value="18000" />
+        </label>
+
+        <label class="field">
+          <span>Ống thoát (m / m² sàn)</span>
+          <input id="drainPipeMPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="0.8" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá ống thoát (VNĐ / m)</span>
+          <input id="priceDrainPipeM" type="number" inputmode="numeric" step="1000" min="0" value="22000" />
+        </label>
+
+        <label class="field">
+          <span>WC (phòng)</span>
+          <input id="wcCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Thiết bị WC (VNĐ / phòng)</span>
+          <input id="priceWcPackage" type="number" inputmode="numeric" step="100000" min="0" value="12000000" />
+        </label>
+
+        <label class="field">
+          <span>Bồn nước (cái)</span>
+          <input id="tankCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá bồn nước (VNĐ / cái)</span>
+          <input id="priceTank" type="number" inputmode="numeric" step="1000" min="0" value="4500000" />
+        </label>
+
+        <label class="field">
+          <span>Máy bơm (cái)</span>
+          <input id="pumpCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá máy bơm (VNĐ / cái)</span>
+          <input id="pricePump" type="number" inputmode="numeric" step="1000" min="0" value="2500000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công nước (VNĐ / m² sàn)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="200000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Diện tích sàn (m²)</div><div id="outFloorArea" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Ước tính theo m² + gói thiết bị WC. Có thể tách chi tiết van/co/tê nếu cần.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "water";
+      const base = getBaseModelFromQuery();
+
+      function compute() {
+        const floorArea = base.x * base.y * base.floors;
+
+        const supplyPipeMPerM2 = clampNonNegative(num(byId("supplyPipeMPerM2").value));
+        const priceSupplyPipeM = clampNonNegative(num(byId("priceSupplyPipeM").value));
+
+        const drainPipeMPerM2 = clampNonNegative(num(byId("drainPipeMPerM2").value));
+        const priceDrainPipeM = clampNonNegative(num(byId("priceDrainPipeM").value));
+
+        const wcCount = Math.round(clampNonNegative(num(byId("wcCount").value)));
+        const priceWcPackage = clampNonNegative(num(byId("priceWcPackage").value));
+
+        const tankCount = Math.round(clampNonNegative(num(byId("tankCount").value)));
+        const priceTank = clampNonNegative(num(byId("priceTank").value));
+
+        const pumpCount = Math.round(clampNonNegative(num(byId("pumpCount").value)));
+        const pricePump = clampNonNegative(num(byId("pricePump").value));
+
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const pipeCost = floorArea * (supplyPipeMPerM2 * priceSupplyPipeM + drainPipeMPerM2 * priceDrainPipeM);
+        const wcCost = wcCount * priceWcPackage;
+        const tankCost = tankCount * priceTank;
+        const pumpCost = pumpCount * pricePump;
+        const laborCost = floorArea * laborPerM2;
+
+        const subtotal = pipeCost + wcCost + tankCost + pumpCost + laborCost + otherCost;
+        return { floorArea, subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outFloorArea").textContent = formatNumber(out.floorArea, 2);
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

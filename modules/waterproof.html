@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Chống thấm</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Chống thấm</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Diện tích WC cần chống thấm (m²)</span>
+          <input id="wcArea" type="number" inputmode="decimal" step="0.1" min="0" value="8" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá WC (VNĐ / m²)</span>
+          <input id="priceWcM2" type="number" inputmode="numeric" step="1000" min="0" value="280000" />
+        </label>
+
+        <label class="field">
+          <span>Ban công (m²)</span>
+          <input id="balconyArea" type="number" inputmode="decimal" step="0.1" min="0" value="6" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá ban công (VNĐ / m²)</span>
+          <input id="priceBalconyM2" type="number" inputmode="numeric" step="1000" min="0" value="240000" />
+        </label>
+
+        <label class="field">
+          <span>Mái/sân thượng (m²)</span>
+          <input id="roofArea" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá mái (VNĐ / m²)</span>
+          <input id="priceRoofM2" type="number" inputmode="numeric" step="1000" min="0" value="220000" />
+        </label>
+
+        <label class="field">
+          <span>Sân (m²)</span>
+          <input id="yardArea" type="number" inputmode="decimal" step="0.1" min="0" value="0" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá sân (VNĐ / m²)</span>
+          <input id="priceYardM2" type="number" inputmode="numeric" step="1000" min="0" value="190000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Chống thấm là hạng mục nên tách riêng (WC/ban công/mái…) vì hay bị quên và sửa rất tốn.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnAuto" class="btn secondary" type="button">Gợi ý theo diện tích sàn</button>
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "waterproof";
+      const base = getBaseModelFromQuery();
+
+      function autoSuggest() {
+        const floorArea = base.x * base.y * base.floors;
+        const baseFloor = base.x * base.y;
+        byId("roofArea").value = Math.round(baseFloor * 1.1);
+        byId("wcArea").value = Math.round(Math.max(6, floorArea * 0.05));
+        byId("balconyArea").value = Math.round(Math.max(4, baseFloor * 0.06));
+        recalc();
+      }
+
+      function compute() {
+        const wcArea = clampNonNegative(num(byId("wcArea").value));
+        const priceWcM2 = clampNonNegative(num(byId("priceWcM2").value));
+        const balconyArea = clampNonNegative(num(byId("balconyArea").value));
+        const priceBalconyM2 = clampNonNegative(num(byId("priceBalconyM2").value));
+        const roofArea = clampNonNegative(num(byId("roofArea").value));
+        const priceRoofM2 = clampNonNegative(num(byId("priceRoofM2").value));
+        const yardArea = clampNonNegative(num(byId("yardArea").value));
+        const priceYardM2 = clampNonNegative(num(byId("priceYardM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const subtotal = wcArea * priceWcM2 + balconyArea * priceBalconyM2 + roofArea * priceRoofM2 + yardArea * priceYardM2 + otherCost;
+        return { subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+      byId("btnAuto").addEventListener("click", autoSuggest);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>

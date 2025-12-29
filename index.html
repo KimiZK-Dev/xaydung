@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tính giá xây nhà (vật tư • hoàn thiện • đối chiếu m²)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div>
+          <h1>Tính giá xây nhà</h1>
+          <p class="subtitle">Nhập kích thước (x, y, z), định mức, đơn giá để ước tính chi phí (tường, kết cấu, hoàn thiện) và đối chiếu theo m².</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnOpenCalc" class="btn" type="button">Máy tính</button>
+          <button id="btnReset" class="btn secondary" type="button">Đặt lại mặc định</button>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="card">
+          <h2>1) Kích thước</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Chiều dài x (m)</span>
+              <input id="x" type="number" inputmode="decimal" step="0.01" min="0" value="10" />
+            </label>
+            <label class="field">
+              <span>Chiều rộng y (m)</span>
+              <input id="y" type="number" inputmode="decimal" step="0.01" min="0" value="6" />
+            </label>
+            <label class="field">
+              <span>Chiều cao tường z (m)</span>
+              <input id="z" type="number" inputmode="decimal" step="0.01" min="0" value="3.2" />
+            </label>
+            <label class="field">
+              <span>Số tầng</span>
+              <input id="floors" type="number" inputmode="numeric" step="1" min="1" value="1" />
+            </label>
+            <label class="field">
+              <span>Tường trong nhà (so với tường ngoài, %)</span>
+              <input id="interiorWallPercent" type="number" inputmode="decimal" step="1" min="0" value="60" />
+            </label>
+            <label class="field full">
+              <span>Diện tích cửa/ô trống cần trừ (m²)</span>
+              <input id="openingsArea" type="number" inputmode="decimal" step="0.01" min="0" value="10" />
+            </label>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Chu vi (m)</div>
+              <div id="outPerimeter" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Diện tích sàn (m²)</div>
+              <div id="outFloorArea" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Tường ngoài (m²)</div>
+              <div id="outExteriorWallArea" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Tổng diện tích tường (m²)</div>
+              <div id="outTotalWallArea" class="stat-value">0</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2) Định mức (tường)</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Gạch (viên / m² tường)</span>
+              <input id="bricksPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="60" />
+            </label>
+            <label class="field">
+              <span>Cát xây (m³ / m² tường)</span>
+              <input id="sandBuildM3PerM2" type="number" inputmode="decimal" step="0.001" min="0" value="0.02" />
+            </label>
+            <label class="field">
+              <span>Xi măng xây (kg / m² tường)</span>
+              <input id="cementBuildKgPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="7" />
+            </label>
+            <label class="field">
+              <span>Cát trát (m³ / m² tường)</span>
+              <input id="sandPlasterM3PerM2" type="number" inputmode="decimal" step="0.001" min="0" value="0.015" />
+            </label>
+            <label class="field">
+              <span>Xi măng trát (kg / m² tường)</span>
+              <input id="cementPlasterKgPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="5" />
+            </label>
+            <label class="field">
+              <span>Khối lượng 1 bao xi măng (kg)</span>
+              <input id="cementBagKg" type="number" inputmode="decimal" step="1" min="1" value="50" />
+            </label>
+          </div>
+          <p class="hint">Bạn có thể chỉnh định mức theo thực tế (tường dày/mỏng, mác vữa, hao hụt...).</p>
+        </section>
+
+        <section class="card">
+          <h2>3) Định mức (sàn & hoàn thiện)</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Bê tông (m³ / m² sàn)</span>
+              <input id="concreteM3PerM2" type="number" inputmode="decimal" step="0.001" min="0" value="0.12" />
+            </label>
+            <label class="field">
+              <span>Thép (kg / m² sàn)</span>
+              <input id="steelKgPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="18" />
+            </label>
+            <label class="field">
+              <span>Sơn (m² sơn / m² tường)</span>
+              <input id="paintM2PerM2Wall" type="number" inputmode="decimal" step="0.01" min="0" value="2" />
+            </label>
+            <label class="field">
+              <span>Hệ số hao hụt gạch lát nền</span>
+              <input id="tileWasteFactor" type="number" inputmode="decimal" step="0.01" min="1" value="1.05" />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>4) Đơn giá (vật liệu)</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Gạch (VNĐ / viên)</span>
+              <input id="priceBrick" type="number" inputmode="numeric" step="1" min="0" value="1500" />
+            </label>
+            <label class="field">
+              <span>Cát (VNĐ / m³)</span>
+              <input id="priceSand" type="number" inputmode="numeric" step="1000" min="0" value="320000" />
+            </label>
+            <label class="field">
+              <span>Xi măng (VNĐ / bao)</span>
+              <input id="priceCementBag" type="number" inputmode="numeric" step="1000" min="0" value="95000" />
+            </label>
+            <label class="field">
+              <span>Bê tông (VNĐ / m³)</span>
+              <input id="priceConcreteM3" type="number" inputmode="numeric" step="1000" min="0" value="1250000" />
+            </label>
+            <label class="field">
+              <span>Thép (VNĐ / kg)</span>
+              <input id="priceSteelKg" type="number" inputmode="numeric" step="100" min="0" value="16500" />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>5) Đơn giá (hoàn thiện)</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Sơn (VNĐ / m²)</span>
+              <input id="pricePaintM2" type="number" inputmode="numeric" step="1000" min="0" value="35000" />
+            </label>
+            <label class="field">
+              <span>Gạch lát nền (VNĐ / m²)</span>
+              <input id="priceTileM2" type="number" inputmode="numeric" step="1000" min="0" value="260000" />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>6) Phụ phí & đối chiếu</h2>
+          <div class="form-grid">
+            <label class="field">
+              <span>Dự phòng/hao hụt (%)</span>
+              <input id="contingencyPercent" type="number" inputmode="decimal" step="0.1" min="0" value="5" />
+            </label>
+            <label class="field">
+              <span>Nhân công (VNĐ / m² sàn)</span>
+              <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="1200000" />
+            </label>
+            <label class="field">
+              <span>Chi phí khác (VNĐ)</span>
+              <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+            </label>
+            <label class="field">
+              <span>Đơn giá trọn gói (VNĐ / m² sàn) để đối chiếu</span>
+              <input id="packagePricePerM2" type="number" inputmode="numeric" step="1000" min="0" value="6500000" />
+            </label>
+          </div>
+          <p class="hint">Phần đối chiếu giúp bạn so tổng tự tính (vật tư + phụ phí) với đơn giá theo m² sàn.</p>
+        </section>
+
+        <section class="card full">
+          <h2>7) Modules nâng cao (tách riêng)</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nhóm</th>
+                  <th>Trạng thái</th>
+                  <th>Tạm tính</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="modulesList"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2" class="total-label">Tổng tiền (VNĐ)</td>
+                  <td id="outModulesTotal" class="total-value">0</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p class="hint">Mỗi module mở thành popup riêng (kéo-thả + co giãn). Khi bấm “Lưu” trong module, trang chính sẽ tự cập nhật tổng.</p>
+        </section>
+
+        <section class="card full">
+          <h2>Kết quả ước tính</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Hạng mục</th>
+                  <th>Số lượng</th>
+                  <th>Đơn vị</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Gạch</td>
+                  <td id="outBricksQty">0</td>
+                  <td>viên</td>
+                  <td id="outBrickUnitPrice">0</td>
+                  <td id="outBrickCost">0</td>
+                </tr>
+                <tr>
+                  <td>Cát xây</td>
+                  <td id="outSandBuildM3">0</td>
+                  <td>m³</td>
+                  <td id="outSandBuildUnitPrice">0</td>
+                  <td id="outSandBuildCost">0</td>
+                </tr>
+                <tr>
+                  <td>Xi măng xây</td>
+                  <td>
+                    <div class="stack">
+                      <div><span id="outCementBuildBags">0</span> bao</div>
+                      <div class="muted">(~ <span id="outCementBuildKg">0</span> kg)</div>
+                    </div>
+                  </td>
+                  <td>bao</td>
+                  <td id="outCementBuildUnitPrice">0</td>
+                  <td id="outCementBuildCost">0</td>
+                </tr>
+                <tr>
+                  <td>Cát trát</td>
+                  <td id="outSandPlasterM3">0</td>
+                  <td>m³</td>
+                  <td id="outSandPlasterUnitPrice">0</td>
+                  <td id="outSandPlasterCost">0</td>
+                </tr>
+                <tr>
+                  <td>Xi măng trát</td>
+                  <td>
+                    <div class="stack">
+                      <div><span id="outCementPlasterBags">0</span> bao</div>
+                      <div class="muted">(~ <span id="outCementPlasterKg">0</span> kg)</div>
+                    </div>
+                  </td>
+                  <td>bao</td>
+                  <td id="outCementPlasterUnitPrice">0</td>
+                  <td id="outCementPlasterCost">0</td>
+                </tr>
+                <tr>
+                  <td>Bê tông</td>
+                  <td id="outConcreteM3">0</td>
+                  <td>m³</td>
+                  <td id="outConcreteUnitPrice">0</td>
+                  <td id="outConcreteCost">0</td>
+                </tr>
+                <tr>
+                  <td>Thép</td>
+                  <td id="outSteelKg">0</td>
+                  <td>kg</td>
+                  <td id="outSteelUnitPrice">0</td>
+                  <td id="outSteelCost">0</td>
+                </tr>
+                <tr>
+                  <td>Sơn</td>
+                  <td id="outPaintM2">0</td>
+                  <td>m²</td>
+                  <td id="outPaintUnitPrice">0</td>
+                  <td id="outPaintCost">0</td>
+                </tr>
+                <tr>
+                  <td>Gạch lát nền</td>
+                  <td id="outTilesM2">0</td>
+                  <td>m²</td>
+                  <td id="outTilesUnitPrice">0</td>
+                  <td id="outTilesCost">0</td>
+                </tr>
+                <tr>
+                  <td>Dự phòng/hao hụt</td>
+                  <td id="outContingencyPercent">0</td>
+                  <td>%</td>
+                  <td></td>
+                  <td id="outContingencyCost">0</td>
+                </tr>
+                <tr>
+                  <td>Nhân công</td>
+                  <td id="outLaborArea">0</td>
+                  <td>m² sàn</td>
+                  <td id="outLaborUnitPrice">0</td>
+                  <td id="outLaborCost">0</td>
+                </tr>
+                <tr>
+                  <td>Chi phí khác</td>
+                  <td>1</td>
+                  <td>gói</td>
+                  <td id="outOtherUnitPrice">0</td>
+                  <td id="outOtherCost">0</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="total-label">Tổng chi phí (ước tính)</td>
+                  <td id="outGrandTotal" class="total-value">0</td>
+                </tr>
+                <tr>
+                  <td colspan="4" class="total-label">Tổng cuối cùng (cộng modules)</td>
+                  <td id="outOverallTotal" class="total-value">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="stats compare">
+            <div class="stat">
+              <div class="stat-label">Tạm tính vật tư (VNĐ)</div>
+              <div id="outMaterialsSubtotal" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Theo đơn giá m² sàn (VNĐ)</div>
+              <div id="outPackageTotal" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Chênh lệch (m² sàn - tự tính)</div>
+              <div id="outDelta" class="stat-value">0</div>
+            </div>
+          </div>
+
+          <div class="scenario">
+            <div class="scenario-actions">
+              <button id="btnSaveA" class="btn secondary" type="button">Lưu kịch bản A</button>
+              <button id="btnApplyA" class="btn" type="button">Áp dụng A</button>
+              <button id="btnSaveB" class="btn secondary" type="button">Lưu kịch bản B</button>
+              <button id="btnApplyB" class="btn" type="button">Áp dụng B</button>
+              <button id="btnClearScenarios" class="btn secondary" type="button">Xoá A/B</button>
+            </div>
+            <div class="stats compare">
+              <div class="stat">
+                <div class="stat-label">Kịch bản A (tổng)</div>
+                <div id="outScenarioATotal" class="stat-value">0</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Kịch bản B (tổng)</div>
+                <div id="outScenarioBTotal" class="stat-value">0</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Chênh lệch (B - A)</div>
+                <div id="outScenarioDelta" class="stat-value">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-note">
+            <div class="note">Lưu ý: Đây là ước tính nhanh để tham khảo và đối chiếu. Thực tế phụ thuộc thiết kế móng/dầm/sàn, chiều dày tường, mác vữa/bê tông, mức hao hụt, chất lượng vật tư, khu vực thi công…</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="popupHost"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

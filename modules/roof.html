@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Mái</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Mái</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Loại mái</span>
+          <select id="roofType">
+            <option value="flat">Mái bằng (BTCT)</option>
+            <option value="sheet">Mái tôn</option>
+            <option value="tile">Mái ngói</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Hệ số diện tích mái (nhân)</span>
+          <input id="slopeFactor" type="number" inputmode="decimal" step="0.01" min="0" value="1.15" />
+        </label>
+
+        <label class="field">
+          <span>Bê tông mái (m³ / m² mái)</span>
+          <input id="concreteM3PerM2Roof" type="number" inputmode="decimal" step="0.001" min="0" value="0.10" />
+        </label>
+
+        <label class="field">
+          <span>Thép mái (kg / m² mái)</span>
+          <input id="steelKgPerM2Roof" type="number" inputmode="decimal" step="0.1" min="0" value="12" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá bê tông (VNĐ / m³)</span>
+          <input id="priceConcreteM3" type="number" inputmode="numeric" step="1000" min="0" value="1250000" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá thép (VNĐ / kg)</span>
+          <input id="priceSteelKg" type="number" inputmode="numeric" step="100" min="0" value="16500" />
+        </label>
+
+        <label class="field">
+          <span>Chống thấm (VNĐ / m² mái)</span>
+          <input id="waterproofPerM2" type="number" inputmode="numeric" step="1000" min="0" value="220000" />
+        </label>
+
+        <label class="field">
+          <span>Lợp (VNĐ / m² mái)</span>
+          <input id="coverPerM2" type="number" inputmode="numeric" step="1000" min="0" value="180000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công mái (VNĐ / m² mái)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="180000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Diện tích mái (m²)</div><div id="outRoofArea" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Diện tích mái = diện tích sàn tầng trên cùng * hệ số. Mái tôn/ngói thường hệ số cao hơn.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "roof";
+      const base = getBaseModelFromQuery();
+
+      function presetByType() {
+        const t = byId("roofType").value;
+        if (t === "flat") {
+          byId("slopeFactor").value = 1.10;
+          byId("concreteM3PerM2Roof").value = 0.10;
+          byId("steelKgPerM2Roof").value = 12;
+          byId("waterproofPerM2").value = 220000;
+          byId("coverPerM2").value = 0;
+          byId("laborPerM2").value = 220000;
+        }
+        if (t === "sheet") {
+          byId("slopeFactor").value = 1.18;
+          byId("concreteM3PerM2Roof").value = 0;
+          byId("steelKgPerM2Roof").value = 4;
+          byId("waterproofPerM2").value = 0;
+          byId("coverPerM2").value = 220000;
+          byId("laborPerM2").value = 110000;
+        }
+        if (t === "tile") {
+          byId("slopeFactor").value = 1.35;
+          byId("concreteM3PerM2Roof").value = 0;
+          byId("steelKgPerM2Roof").value = 6;
+          byId("waterproofPerM2").value = 0;
+          byId("coverPerM2").value = 420000;
+          byId("laborPerM2").value = 140000;
+        }
+        recalc();
+      }
+
+      function compute() {
+        const floorArea = base.x * base.y * base.floors;
+        const slopeFactor = Math.max(0, num(byId("slopeFactor").value) || 1);
+        const roofArea = floorArea > 0 ? (base.x * base.y) * slopeFactor : 0;
+
+        const concreteM3PerM2Roof = clampNonNegative(num(byId("concreteM3PerM2Roof").value));
+        const steelKgPerM2Roof = clampNonNegative(num(byId("steelKgPerM2Roof").value));
+
+        const priceConcreteM3 = clampNonNegative(num(byId("priceConcreteM3").value));
+        const priceSteelKg = clampNonNegative(num(byId("priceSteelKg").value));
+
+        const waterproofPerM2 = clampNonNegative(num(byId("waterproofPerM2").value));
+        const coverPerM2 = clampNonNegative(num(byId("coverPerM2").value));
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const concreteCost = roofArea * concreteM3PerM2Roof * priceConcreteM3;
+        const steelCost = roofArea * steelKgPerM2Roof * priceSteelKg;
+        const waterproofCost = roofArea * waterproofPerM2;
+        const coverCost = roofArea * coverPerM2;
+        const laborCost = roofArea * laborPerM2;
+
+        const subtotal = concreteCost + steelCost + waterproofCost + coverCost + laborCost + otherCost;
+
+        return {
+          roofArea,
+          subtotal,
+        };
+      }
+
+      function recalc() {
+        byId("priceConcreteM3").value = byId("priceConcreteM3").value || base.priceConcreteM3;
+        byId("priceSteelKg").value = byId("priceSteelKg").value || base.priceSteelKg;
+
+        const out = compute();
+        byId("outRoofArea").textContent = formatNumber(out.roofArea, 2);
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      byId("roofType").addEventListener("change", presetByType);
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      presetByType();
+      recalc();
+    </script>
+  </body>
+</html>

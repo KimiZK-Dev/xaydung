@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module: Điện</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Điện</h1>
+
+      <div class="grid">
+        <label class="field">
+          <span>Dây điện (m / m² sàn)</span>
+          <input id="wireMPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="3.2" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá dây (VNĐ / m)</span>
+          <input id="priceWireM" type="number" inputmode="numeric" step="1000" min="0" value="9000" />
+        </label>
+
+        <label class="field">
+          <span>Ống gen (m / m² sàn)</span>
+          <input id="conduitMPerM2" type="number" inputmode="decimal" step="0.1" min="0" value="2.4" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá ống gen (VNĐ / m)</span>
+          <input id="priceConduitM" type="number" inputmode="numeric" step="1000" min="0" value="6000" />
+        </label>
+
+        <label class="field">
+          <span>Công tắc/ổ cắm (cái / m² sàn)</span>
+          <input id="devicePerM2" type="number" inputmode="decimal" step="0.01" min="0" value="0.12" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá TB (VNĐ / cái)</span>
+          <input id="priceDevice" type="number" inputmode="numeric" step="1000" min="0" value="75000" />
+        </label>
+
+        <label class="field">
+          <span>Tủ điện (cái)</span>
+          <input id="panelCount" type="number" inputmode="numeric" step="1" min="0" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá tủ điện (VNĐ / cái)</span>
+          <input id="pricePanel" type="number" inputmode="numeric" step="1000" min="0" value="2500000" />
+        </label>
+
+        <label class="field">
+          <span>Đèn (cái / m² sàn)</span>
+          <input id="lampPerM2" type="number" inputmode="decimal" step="0.01" min="0" value="0.08" />
+        </label>
+
+        <label class="field">
+          <span>Đơn giá đèn (VNĐ / cái)</span>
+          <input id="priceLamp" type="number" inputmode="numeric" step="1000" min="0" value="180000" />
+        </label>
+
+        <label class="field">
+          <span>Nhân công điện (VNĐ / m² sàn)</span>
+          <input id="laborPerM2" type="number" inputmode="numeric" step="1000" min="0" value="220000" />
+        </label>
+
+        <label class="field">
+          <span>Chi phí khác (VNĐ)</span>
+          <input id="otherCost" type="number" inputmode="numeric" step="1000" min="0" value="0" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="kv"><div class="k">Diện tích sàn (m²)</div><div id="outFloorArea" class="v">0</div></div>
+        <div class="kv"><div class="k">Tạm tính</div><div id="outSubtotal" class="v">0</div></div>
+        <div class="small">Đây là ước tính nhanh theo m². Nếu bạn có bản vẽ M&E, có thể chuyển sang nhập “m dây thực tế / số điểm”.</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSave" class="btn" type="button">Lưu về trang chính</button>
+        <button id="btnClear" class="btn secondary" type="button">Đặt về 0</button>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      const MODULE_KEY = "electric";
+      const base = getBaseModelFromQuery();
+
+      function compute() {
+        const floorArea = base.x * base.y * base.floors;
+
+        const wireMPerM2 = clampNonNegative(num(byId("wireMPerM2").value));
+        const priceWireM = clampNonNegative(num(byId("priceWireM").value));
+
+        const conduitMPerM2 = clampNonNegative(num(byId("conduitMPerM2").value));
+        const priceConduitM = clampNonNegative(num(byId("priceConduitM").value));
+
+        const devicePerM2 = clampNonNegative(num(byId("devicePerM2").value));
+        const priceDevice = clampNonNegative(num(byId("priceDevice").value));
+
+        const panelCount = Math.round(clampNonNegative(num(byId("panelCount").value)));
+        const pricePanel = clampNonNegative(num(byId("pricePanel").value));
+
+        const lampPerM2 = clampNonNegative(num(byId("lampPerM2").value));
+        const priceLamp = clampNonNegative(num(byId("priceLamp").value));
+
+        const laborPerM2 = clampNonNegative(num(byId("laborPerM2").value));
+        const otherCost = clampNonNegative(num(byId("otherCost").value));
+
+        const wireCost = floorArea * wireMPerM2 * priceWireM;
+        const conduitCost = floorArea * conduitMPerM2 * priceConduitM;
+        const deviceCost = floorArea * devicePerM2 * priceDevice;
+        const panelCost = panelCount * pricePanel;
+        const lampCost = floorArea * lampPerM2 * priceLamp;
+        const laborCost = floorArea * laborPerM2;
+
+        const subtotal = wireCost + conduitCost + deviceCost + panelCost + lampCost + laborCost + otherCost;
+        return { floorArea, subtotal };
+      }
+
+      function recalc() {
+        const out = compute();
+        byId("outFloorArea").textContent = formatNumber(out.floorArea, 2);
+        byId("outSubtotal").textContent = formatMoneyVND(Math.ceil(out.subtotal));
+      }
+
+      bindRecalc(recalc);
+
+      byId("btnSave").addEventListener("click", () => {
+        const out = compute();
+        saveModuleSubtotal(MODULE_KEY, out.subtotal);
+      });
+
+      byId("btnClear").addEventListener("click", () => {
+        saveModuleSubtotal(MODULE_KEY, 0);
+        byId("outSubtotal").textContent = formatMoneyVND(0);
+      });
+
+      requestModuleSaved(MODULE_KEY);
+      recalc();
+    </script>
+  </body>
+</html>
